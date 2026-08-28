@@ -1,10 +1,11 @@
 // lib/credits/index.ts — CR AudioViz AI Platform Standard
 import { createClient } from '@supabase/supabase-js';
+import { secretKey, supabaseUrl } from "@craudioviz/platform-sdk";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://kteobfyferrukqeolofj.supabase.co';
+const SUPABASE_URL = supabaseUrl();
 
 function getAdmin() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = secretKey();
   if (!key) return null;
   return createClient(SUPABASE_URL, key, { auth: { persistSession: false } });
 }
