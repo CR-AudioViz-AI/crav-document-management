@@ -1,9 +1,10 @@
 // lib/supabase.ts — lazy init, no module-level createClient calls
 import { createClient as _c } from "@supabase/supabase-js"
+import { secretKey, publishableKey, supabaseUrl } from "@craudioviz/platform-sdk";
 
-function getURL() { return process.env.NEXT_PUBLIC_SUPABASE_URL || "" }
-function getANON() { return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "" }
-function getSVC() { return process.env.SUPABASE_SERVICE_ROLE_KEY || getANON() }
+function getURL() { return supabaseUrl() }
+function getANON() { return publishableKey() }
+function getSVC() { return secretKey() || getANON() }
 
 // Lazy singletons
 let _supabase: ReturnType<typeof _c> | null = null
