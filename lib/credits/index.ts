@@ -25,7 +25,7 @@ export async function deductCredits(userId: string, amount: number, operation: s
   if (credits.balance < amount) return { success: false, error: 'Insufficient credits' };
   const newBalance = credits.balance - amount;
   await supabaseAdmin.from('user_credits').update({ balance: newBalance, lifetime_spent: (credits.lifetime_spent || 0) + amount, updated_at: new Date().toISOString() }).eq('user_id', userId);
-  await supabaseAdmin.from('credit_transactions').insert({ user_id: userId, amount: -amount, transaction_type: 'spend', app_id: appId, operation, description: \`\${appId}: \${operation}\`, metadata });
+  await supabaseAdmin.from('credit_transactions').insert({ user_id: userId, amount: -amount, transaction_type: 'spend', app_id: appId, operation, description: `\${appId}: \${operation}`, metadata });
   return { success: true, newBalance };
 }
 
@@ -35,7 +35,7 @@ export async function refundCredits(userId: string, amount: number, reason: stri
   const { data } = await supabaseAdmin.from('user_credits').select('balance').eq('user_id', userId).single();
   if (!data) return { success: false, error: 'User not found' };
   await supabaseAdmin.from('user_credits').update({ balance: data.balance + amount }).eq('user_id', userId);
-  await supabaseAdmin.from('credit_transactions').insert({ user_id: userId, amount, transaction_type: 'refund', app_id: appId, description: \`Refund: \${reason}\` });
+  await supabaseAdmin.from('credit_transactions').insert({ user_id: userId, amount, transaction_type: 'refund', app_id: appId, description: `Refund: \${reason}` });
   return { success: true };
 }
 
