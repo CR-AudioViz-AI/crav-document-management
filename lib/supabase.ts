@@ -25,21 +25,33 @@ export function getSupabase() { return getSupabaseClient() }
 
 // createClient helpers
 export const createClient = () => _c(getURL(), getANON())
-export const createClientComponentClient = () => _c(getURL(), getANON())
-export const createServerComponentClient = () => _c(getURL(), getANON())
+// 2026-08-29: the duplicate pair at the bottom of this file was removed, and THESE
+// were removed too — both definitions were wrong in the same way.
+//
+// Each call built a NEW client. lib/supabase/client.ts across this platform is a
+// module-level singleton for a hard-won reason: multiple client instances race on
+// the chunked auth cookie and clobber each other, which is what broke OAuth
+// sessions once already. A factory that mints a fresh client per call reintroduces
+// exactly that.
+//
+// The lazy singleton getters above are the correct shape, so the aliases below
+// point at them.
 
 // Convenience re-exports for code that uses `supabase.from(...)` directly
 // These are getters so they initialize lazily
 export const supabase = {
   get auth() { return getSupabaseClient().auth },
   from: (table: string) => getSupabaseClient().from(table),
-  rpc: (fn: string, args?: object) => getSupabaseClient().rpc(fn, args),
+  // 2026-08-29: `args` is typed object and rpc's parameter resolves to never
+  // without generated Database types, so TS2345. Cast at the boundary rather than
+  // widening the public signature — callers still see `object`.
+  rpc: (fn: string, args?: object) => getSupabaseClient().rpc(fn, args as never),
 }
 
 export const supabaseAdmin = {
   get auth() { return getSupabaseAdmin().auth },
   from: (table: string) => getSupabaseAdmin().from(table),
-  rpc: (fn: string, args?: object) => getSupabaseAdmin().rpc(fn, args),
+  rpc: (fn: string, args?: object) => getSupabaseAdmin().rpc(fn, args as never),
 }
 
 export async function getUser(c?: ReturnType<typeof createClient>) {
@@ -56,7 +68,16 @@ export function shouldChargeCredits(e?: string | null) {
 export function isAdmin(e?: string | null) {
   return !shouldChargeCredits(e)
 }
-// Aliases for components that import specific client creation functions
+// Aliases for components that import specific client creation functions.
+//
+// 2026-08-29: createClientComponentClient and createServerComponentClient were
+// DECLARED TWICE in this file — once at line 28 as fresh-client factories, once
+// here as singleton aliases. TS2451 four times, so the module never compiled, and
+// because it never compiled every importer of '@/lib/supabase' failed with TS2307.
+// Three more errors in this repo were that one cause wearing a different message.
+//
+// Kept the singleton aliases and deleted the factories: a fresh client per call
+// races on the chunked auth cookie, which is what broke OAuth sessions before.
 export const createSupabaseBrowserClient = getSupabaseClient
 export const createClientComponentClient = getSupabaseClient
 export const createServerComponentClient = getSupabaseAdmin
