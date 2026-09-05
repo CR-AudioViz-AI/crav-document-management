@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "next dev",
-    "build": "next build"
+    "build": "next build",
+    "prebuild": "node scripts/audit-route-auth.mjs"
   },
   "dependencies": {
     "@craudioviz/platform-sdk": "git+https://github.com/CR-AudioViz-AI/platform-sdk.git",
